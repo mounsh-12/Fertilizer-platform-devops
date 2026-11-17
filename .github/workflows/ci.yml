@@ -118,7 +118,7 @@ jobs:
 
       - name: Upload Trivy reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           name: trivy-security-reports
           path: |
