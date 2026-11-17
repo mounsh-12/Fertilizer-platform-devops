@@ -74,29 +74,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       - name: Verify Dockerfiles
         run: |
+          ls -l backend/Dockerfile
+          ls -l frontend/Dockerfile
           test -s backend/Dockerfile
           test -s frontend/Dockerfile
-          echo "Both Dockerfiles exist and are non-empty."
 
       - name: Build backend Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./backend
-          file: Dockerfile
-          push: false
-          tags: fertilizer-backend:ci
+        run: |
+          docker build \
+            --file backend/Dockerfile \
+            --tag fertilizer-backend:ci \
+            ./backend
 
       - name: Build frontend Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./frontend
-          file: Dockerfile
-          push: false
-          build-args: |
-            VITE_API_URL=http://localhost:5001
-          tags: fertilizer-frontend:ci
+        run: |
+          docker build \
+            --file frontend/Dockerfile \
+            --build-arg VITE_API_URL=http://localhost:5001 \
+            --tag fertilizer-frontend:ci \
+            ./frontend
