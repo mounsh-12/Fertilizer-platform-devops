@@ -81,6 +81,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./backend
+          file: ./backend/Dockerfile
           push: false
           tags: fertilizer-backend:ci
 
@@ -88,6 +89,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./frontend
+          file: ./frontend/Dockerfile
           push: false
           build-args: |
             VITE_API_URL=http://localhost:5001
