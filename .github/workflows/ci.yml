@@ -97,7 +97,7 @@ jobs:
             ./frontend
 
       - name: Scan backend image with Trivy
-        uses: aquasecurity/trivy-action@0.30.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: image
           image-ref: fertilizer-backend:ci
@@ -107,7 +107,7 @@ jobs:
           exit-code: '0'
 
       - name: Scan frontend image with Trivy
-        uses: aquasecurity/trivy-action@0.30.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: image
           image-ref: fertilizer-frontend:ci
@@ -118,7 +118,7 @@ jobs:
 
       - name: Upload Trivy reports
         if: always()
-        uses: aquasecurity/trivy-action@v0.36.0
+        uses: actions/upload-artifact@v4
         with:
           name: trivy-security-reports
           path: |
