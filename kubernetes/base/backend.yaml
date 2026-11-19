@@ -1,0 +1,102 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: fertilizer-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fertilizer-backend
+  template:
+    metadata:
+      labels:
+        app: fertilizer-backend
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+
+      containers:
+        - name: backend
+          image: fertilizer-backend:local
+          imagePullPolicy: Never
+
+          ports:
+            - containerPort: 5001
+              name: http
+
+          envFrom:
+            - secretRef:
+                name: backend-secret
+
+          env:
+            - name: DB_HOST
+              value: mysql
+            - name: DB_PORT
+              value: "3306"
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: "5001"
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/uploads
+            - name: tmp
+              mountPath: /tmp
+
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 5001
+            initialDelaySeconds: 10
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 5001
+            initialDelaySeconds: 20
+            periodSeconds: 20
+
+      volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: backend-uploads
+        - name: tmp
+          emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: fertilizer-platform
+spec:
+  type: ClusterIP
+  selector:
+    app: fertilizer-backend
+  ports:
+    - name: http
+      port: 5001
+      targetPort: 5001
