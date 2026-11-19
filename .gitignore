@@ -30,3 +30,44 @@ logs/
 *.tmp
 *.swp
 EOF*.zip
+
+
+# Database backups
+backups/
+*.sql
+*.sql.gz
+
+
+# Database credentials
+mysql.env
+backups/
+*.sql
+*.sql.gz
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+monitoring/mysql-exporter/.my.cnf
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# AIOps generated data
+aiops/metrics_history.csv
+aiops/anomaly_model.joblib
+aiops/aiops.log
+aiops/incident_report.txt
+
+# Logs
+*.log
+
+# Terraform
+infrastructure/terraform/.terraform/
+infrastructure/terraform/*.tfstate
+infrastructure/terraform/*.tfstate.*
+infrastructure/terraform/*.tfplan
+infrastructure/terraform/.terraform.lock.hcl

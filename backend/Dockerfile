@@ -1,28 +1,43 @@
 
-# Use Node.js 22 as the base image
-FROM node:22-alpine
-RUN apk upgrade --no-cache && npm install -g npm@11
-# Set the container working directory
+# Stage 1: Install production dependencies
+FROM node:22-alpine AS build
+
 WORKDIR /app
 
-# Copy dependency manifests
+RUN apk update && apk upgrade --no-cache
+
 COPY package*.json ./
 
-# Install production dependencies only
 RUN npm ci --omit=dev
 
-# Copy backend application files
+
+# Stage 2: Production runtime
+FROM node:22-alpine
+
+WORKDIR /app
+
+RUN apk update && apk upgrade --no-cache
+
+# Remove unused global package managers
+RUN rm -rf \
+    /usr/local/lib/node_modules/npm \
+    /usr/local/lib/node_modules/corepack \
+    /usr/local/bin/npm \
+    /usr/local/bin/npx \
+    /usr/local/bin/corepack
+
+# Copy production dependencies
+COPY --from=build --chown=node:node /app/node_modules ./node_modules
+
+# Copy backend source
 COPY --chown=node:node . .
 
-# Create directory for generated invoice PDFs
+# Prepare upload directory
 RUN mkdir -p uploads/invoices \
     && chown -R node:node /app
 
-# Run as a non-root user
 USER node
 
-# Backend listens on port 5001
 EXPOSE 5001
 
-# Start the production server
-CMD ["npm", "start"]
+CMD ["node", "server.js"]

@@ -1,0 +1,5 @@
+Project: Sri Byraweswara Traders
+Environment: development
+Replica Count: 2
+Monitoring: true
+Project Identifier: Sri Byraweswara Traders-development
