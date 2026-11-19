@@ -1,5 +1,5 @@
 
-name: Sri Byraweswara Traders - DevSecOps Pipeline
+name: Docker Build and Trivy Security Gates
 
 on:
   push:
@@ -28,13 +28,11 @@ jobs:
           curl -sSfL \
             "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz" \
             -o gitleaks.tar.gz
-
           tar -xzf gitleaks.tar.gz gitleaks
           sudo install gitleaks /usr/local/bin/gitleaks
 
       - name: Scan repository files for secrets
-        run: |
-          gitleaks dir . --redact --exit-code 1
+        run: gitleaks dir . --redact --exit-code 1
 
   # 2. Dependency Security Scanning
   dependency-scan:
@@ -42,6 +40,7 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
         directory: [backend, frontend]
 
@@ -97,14 +96,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build backend image
-        run: |
-          docker build \
-            -t fertilizer-backend:ci \
-            ./backend
+      - name: Build backend Docker image
+        run: docker build -t fertilizer-backend:ci ./backend
 
-      - name: Build frontend image
-        run: |
-          docker build \
-            -t fertilizer-frontend:ci \
-            ./frontend
+      - name: Build frontend Docker image
+        run: docker build -t fertilizer-frontend:ci ./frontend
