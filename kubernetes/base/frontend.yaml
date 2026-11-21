@@ -1,8 +1,11 @@
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: frontend
   namespace: fertilizer-platform
+  labels:
+    app: frontend
 spec:
   replicas: 1
   selector:
@@ -13,24 +16,37 @@ spec:
       labels:
         app: frontend
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
+
       containers:
         - name: frontend
           image: fertilizer-frontend:local
           imagePullPolicy: Never
+
           ports:
-            - containerPort: 80
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 80
-            initialDelaySeconds: 5
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 80
-            initialDelaySeconds: 15
-            periodSeconds: 20
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 101
+            runAsGroup: 101
+            capabilities:
+              drop:
+                - ALL
+
+          volumeMounts:
+            - name: nginx-tmp
+              mountPath: /tmp
+
           resources:
             requests:
               cpu: 100m
@@ -38,6 +54,25 @@ spec:
             limits:
               cpu: 500m
               memory: 256Mi
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+
+      volumes:
+        - name: nginx-tmp
+          emptyDir: {}
+
 ---
 apiVersion: v1
 kind: Service
@@ -45,9 +80,11 @@ metadata:
   name: frontend
   namespace: fertilizer-platform
 spec:
-  type: ClusterIP
   selector:
     app: frontend
   ports:
-    - port: 80
-      targetPort: 80
+    - name: http
+      port: 80
+      targetPort: 8080
+      protocol: TCP
+  type: ClusterIP

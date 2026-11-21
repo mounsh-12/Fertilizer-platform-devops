@@ -34,15 +34,36 @@ spec:
     metadata:
       labels:
         app: fertilizer-mysql
+
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+
       containers:
         - name: mysql
           image: mysql:8.4
           imagePullPolicy: IfNotPresent
 
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 999
+            runAsGroup: 999
+            capabilities:
+              drop:
+                - ALL
+
           ports:
             - name: mysql
               containerPort: 3306
+              protocol: TCP
 
           env:
             - name: MYSQL_ROOT_PASSWORD
@@ -110,6 +131,25 @@ spec:
           volumeMounts:
             - name: mysql-storage
               mountPath: /var/lib/mysql
+
+            - name: mysql-runtime
+              mountPath: /var/run/mysqld
+
+            - name: mysql-tmp
+              mountPath: /tmp
+
+            - name: mysql-files
+              mountPath: /var/lib/mysql-files
+
+      volumes:
+        - name: mysql-runtime
+          emptyDir: {}
+
+        - name: mysql-tmp
+          emptyDir: {}
+
+        - name: mysql-files
+          emptyDir: {}
 
   volumeClaimTemplates:
     - metadata:
